@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TravelAPI.Models
 {
@@ -15,6 +16,7 @@ namespace TravelAPI.Models
         public DateTime createdAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         [ForeignKey("HotelId")]
-        public Hotel hotel { get; set; }
+        [JsonIgnore]
+        public Hotel? hotel { get; set; }
     }
 }

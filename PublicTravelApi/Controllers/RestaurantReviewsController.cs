@@ -10,6 +10,8 @@ using TravelAPI.DataAccessLayer;
 
 namespace PublicTravelApi.Controllers
 {
+    [ApiController]
+    [Route("/api/RestaurantReviews")]
     public class RestaurantReviewsController : Controller
     {
         private readonly DataContext _context;
@@ -20,6 +22,7 @@ namespace PublicTravelApi.Controllers
         }
 
         // GET: RestaurantReviews
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var dataContext = _context.restrauntReviews.Include(r => r.restraunt);

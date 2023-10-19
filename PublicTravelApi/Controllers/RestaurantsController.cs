@@ -10,6 +10,8 @@ using TravelAPI.DataAccessLayer;
 
 namespace PublicTravelApi.Controllers
 {
+    [ApiController]
+    [Route("api/Restaurant")]
     public class RestaurantsController : Controller
     {
         private readonly DataContext _context;
@@ -20,14 +22,23 @@ namespace PublicTravelApi.Controllers
         }
 
         // GET: Restaurants
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-              return _context.restraunts != null ? 
-                          View(await _context.restraunts.ToListAsync()) :
-                          Problem("Entity set 'DataContext.restraunts'  is null.");
+            var Restaurants = await _context.restraunts.ToListAsync();
+            if (Restaurants != null)
+            {
+                return Ok(Restaurants);
+            }
+            else
+            {
+                return BadRequest("Restaurants are not available");
+            }
+             
         }
 
         // GET: Restaurants/Details/5
+        [HttpGet("{Id}")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.restraunts == null)
@@ -42,18 +53,14 @@ namespace PublicTravelApi.Controllers
                 return NotFound();
             }
 
-            return View(restaurant);
+            return Ok(restaurant);
         }
 
-        // GET: Restaurants/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        // Post: Restaurants/Create
+     //
 
         // POST: Restaurants/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Slug,Description,Keywords,PhoneNumber,RestrauntEmail,Opens,Closes,City,State,PostalCode,Phone,Price,ReserveUrl,ImageUrl,ReservePhoneNumberUrl,createdAt,UpdatedAt")] Restaurant restaurant)
@@ -68,6 +75,7 @@ namespace PublicTravelApi.Controllers
         }
 
         // GET: Restaurants/Edit/5
+        [HttpPost("{Id}")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.restraunts == null)
@@ -86,39 +94,9 @@ namespace PublicTravelApi.Controllers
         // POST: Restaurants/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Slug,Description,Keywords,PhoneNumber,RestrauntEmail,Opens,Closes,City,State,PostalCode,Phone,Price,ReserveUrl,ImageUrl,ReservePhoneNumberUrl,createdAt,UpdatedAt")] Restaurant restaurant)
-        {
-            if (id != restaurant.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(restaurant);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RestaurantExists(restaurant.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(restaurant);
-        }
 
         // GET: Restaurants/Delete/5
+        [HttpDelete("{Id}")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.restraunts == null)

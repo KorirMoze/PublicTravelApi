@@ -12,7 +12,7 @@ namespace PublicTravelApi.Controllers
 {
     [ApiController]
     [Route("api/hotels")]
-    public class HotelsController : Controller
+    public class HotelsController : ControllerBase
     {
         private readonly DataContext _context;
 
@@ -21,11 +21,10 @@ namespace PublicTravelApi.Controllers
             _context = context;
         }
 
-        // GET: Hotels
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var hotels = await _context.hotels.ToListAsync();
+            var hotels = await _context.hotels.Include(x=>x.hotelReviews).ToListAsync();
 
             if (hotels != null)
             {
@@ -37,139 +36,70 @@ namespace PublicTravelApi.Controllers
             }
         }
 
-        // GET: Hotels/Details/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.hotels == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var hotel = await _context.hotels
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var hotel = await _context.hotels.FirstOrDefaultAsync(m => m.Id == id);
+
             if (hotel == null)
             {
                 return NotFound();
             }
 
-            return View(hotel);
+            return Ok(hotel); // Return the hotel details as JSON
         }
 
-        // GET: Hotels/Create
-
-      //  public IActionResult Create()
-      //  {
-      //      return View();
-      //  }
-
-        // POST: Hotels/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Slug,Description,Keywords,PhoneNumber,RestrauntEmail,Opens,Closes,City,State,PostalCode,Phone,Price,ReserveUrl,ImageUrl,ReservePhoneNumberUrl,createdAt,UpdatedAt")] Hotel hotel)
+        public async Task<IActionResult> Create([FromBody] Hotel hotel)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(hotel);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return CreatedAtAction(nameof(Details), new { id = hotel.Id }, hotel);
             }
-            return View(hotel);
+
+            return BadRequest(ModelState);
         }
 
-        // GET: Hotels/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.hotels == null)
-            {
-                return NotFound();
-            }
-
-            var hotel = await _context.hotels.FindAsync(id);
-            if (hotel == null)
-            {
-                return NotFound();
-            }
-            return View(hotel);
-        }
-
-        // POST: Hotels/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Slug,Description,Keywords,PhoneNumber,RestrauntEmail,Opens,Closes,City,State,PostalCode,Phone,Price,ReserveUrl,ImageUrl,ReservePhoneNumberUrl,createdAt,UpdatedAt")] Hotel hotel)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Edit(int id, [FromBody] Hotel hotel)
         {
             if (id != hotel.Id)
             {
-                return NotFound();
+                return BadRequest("Invalid request");
             }
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(hotel);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!HotelExists(hotel.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                _context.Update(hotel);
+                await _context.SaveChangesAsync();
+                return Ok(hotel); // Return the updated hotel as JSON
             }
-            return View(hotel);
+
+            return BadRequest(ModelState);
         }
 
-        // GET: Hotels/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null || _context.hotels == null)
-            {
-                return NotFound();
-            }
+            var hotel = await _context.hotels.FindAsync(id);
 
-            var hotel = await _context.hotels
-                .FirstOrDefaultAsync(m => m.Id == id);
             if (hotel == null)
             {
                 return NotFound();
             }
 
-            return View(hotel);
-        }
-
-        // POST: Hotels/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.hotels == null)
-            {
-                return Problem("Entity set 'DataContext.hotels'  is null.");
-            }
-            var hotel = await _context.hotels.FindAsync(id);
-            if (hotel != null)
-            {
-                _context.hotels.Remove(hotel);
-            }
-            
+            _context.hotels.Remove(hotel);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool HotelExists(int id)
-        {
-          return (_context.hotels?.Any(e => e.Id == id)).GetValueOrDefault();
+            return NoContent(); // Return a 204 No Content response
         }
     }
+
+
 }

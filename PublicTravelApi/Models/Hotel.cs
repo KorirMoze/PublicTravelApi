@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TravelAPI.Models
 {
@@ -22,6 +23,7 @@ namespace TravelAPI.Models
         public string ReserveUrl { get; set; }
         public string ImageUrl { get; set; }
         public string ReservePhoneNumberUrl { get; set; }
+        
         public List<HotelReview> hotelReviews { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime UpdatedAt { get; set; }

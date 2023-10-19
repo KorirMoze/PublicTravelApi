@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +10,9 @@ using TravelAPI.Models;
 
 namespace PublicTravelApi.Controllers
 {
-    public class HotelReviewsController : Controller
+    [ApiController]
+    [Route("api/hotelReviews")]
+    public class HotelReviewsController : ControllerBase
     {
         private readonly DataContext _context;
 
@@ -19,17 +21,27 @@ namespace PublicTravelApi.Controllers
             _context = context;
         }
 
-        // GET: HotelReviews
+        // GET: api/hotelReviews
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var dataContext = _context.hotelReviews.Include(h => h.hotel);
-            return View(await dataContext.ToListAsync());
+            var hotelReviews = await _context.hotelReviews.ToListAsync();
+
+            if (hotelReviews != null)
+            {
+                return Ok(hotelReviews);
+            }
+            else
+            {
+                return NotFound("Hotel Reviews Not Found");
+            }
         }
 
-        // GET: HotelReviews/Details/5
+        // GET: api/hotelReviews/5
+        [HttpGet("{id}")]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.hotelReviews == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -37,95 +49,65 @@ namespace PublicTravelApi.Controllers
             var hotelReview = await _context.hotelReviews
                 .Include(h => h.hotel)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (hotelReview == null)
             {
                 return NotFound();
             }
 
-            return View(hotelReview);
+            return Ok(hotelReview);
         }
 
-        // GET: HotelReviews/Create
-        public IActionResult Create()
-        {
-            ViewData["HotelId"] = new SelectList(_context.hotels, "Id", "Id");
-            return View();
-        }
-
-        // POST: HotelReviews/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // GET: api/hotelReviews/create
+        // POST: api/hotelReviews
+    
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Author,Email,Body,HotelId,createdAt,UpdatedAt")] HotelReview hotelReview)
+        public async Task<IActionResult> Create([FromBody] HotelReview hotelReview)
         {
-            if (ModelState.IsValid)
+            if (hotelReview == null)
             {
-                _context.Add(hotelReview);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return BadRequest("Invalid data");
             }
-            ViewData["HotelId"] = new SelectList(_context.hotels, "Id", "Id", hotelReview.HotelId);
-            return View(hotelReview);
+
+            try
+            {
+                // Implement the creation logic here (e.g., validation and saving to the database)
+                _context.hotelReviews.Add(hotelReview);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction("Details", new { id = hotelReview.Id }, hotelReview);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while creating the HotelReview.");
+            }
         }
 
-        // GET: HotelReviews/Edit/5
+
+        // PUT: api/hotelReviews/5
+        [HttpPut("{id}")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.hotelReviews == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var hotelReview = await _context.hotelReviews.FindAsync(id);
+
             if (hotelReview == null)
             {
                 return NotFound();
             }
-            ViewData["HotelId"] = new SelectList(_context.hotels, "Id", "Id", hotelReview.HotelId);
-            return View(hotelReview);
+
+            return Ok(hotelReview);
         }
 
-        // POST: HotelReviews/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Author,Email,Body,HotelId,createdAt,UpdatedAt")] HotelReview hotelReview)
-        {
-            if (id != hotelReview.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(hotelReview);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!HotelReviewExists(hotelReview.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["HotelId"] = new SelectList(_context.hotels, "Id", "Id", hotelReview.HotelId);
-            return View(hotelReview);
-        }
-
-        // GET: HotelReviews/Delete/5
+        // DELETE: api/hotelReviews/5
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.hotelReviews == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -133,36 +115,19 @@ namespace PublicTravelApi.Controllers
             var hotelReview = await _context.hotelReviews
                 .Include(h => h.hotel)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (hotelReview == null)
             {
                 return NotFound();
             }
 
-            return View(hotelReview);
-        }
-
-        // POST: HotelReviews/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.hotelReviews == null)
-            {
-                return Problem("Entity set 'DataContext.hotelReviews'  is null.");
-            }
-            var hotelReview = await _context.hotelReviews.FindAsync(id);
-            if (hotelReview != null)
-            {
-                _context.hotelReviews.Remove(hotelReview);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return Ok(hotelReview);
         }
 
         private bool HotelReviewExists(int id)
         {
-          return (_context.hotelReviews?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.hotelReviews?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
+
 }
