@@ -23,7 +23,7 @@ namespace PublicTravelApi.Models
         public string ReserveUrl { get; set; }
         public string ImageUrl { get; set; }
         public string ReservePhoneNumberUrl { get; set; }
-        public List<RestaurantReview> hotelReviews { get; set; }
+        public List<RestaurantReview> RestaurantReview { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

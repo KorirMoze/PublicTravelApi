@@ -25,12 +25,19 @@ namespace PublicTravelApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var dataContext = _context.restrauntReviews.Include(r => r.restraunt);
-            return View(await dataContext.ToListAsync());
+            var RestaurantReviews = await _context.restrauntReviews.ToListAsync();
+            if (RestaurantReviews != null)
+            {
+                return Ok(RestaurantReviews);
+            }
+            else 
+            {
+                return Ok("No TReviews Yet"); 
+            }
         }
 
         // GET: RestaurantReviews/Details/5
-        [HttpGet]
+        [HttpGet("{Id}")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.restrauntReviews == null)
@@ -46,7 +53,7 @@ namespace PublicTravelApi.Controllers
                 return NotFound();
             }
 
-            return View(restaurantReview);
+            return Ok(restaurantReview);
         }
 
         // GET: RestaurantReviews/Create

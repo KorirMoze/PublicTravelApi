@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using PublicTravelApi.Models;
 using TravelAPI.DataAccessLayer;
 using TravelAPI.Models;
 
@@ -22,10 +23,15 @@ namespace PublicTravelApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult <IEnumerable<Hotel>>> GetHotels([FromQuery]PaginationFilter filter)
         {
-            var hotels = await _context.hotels.Include(x=>x.hotelReviews).ToListAsync();
-
+            var validPageFilter = new PaginationFilter(filter.per_page, filter.current_page);
+            var hotels = await _context.hotels.Include(x=>x.hotelReviews)
+                .Skip((validPageFilter.current_page-1)*validPageFilter.per_page) 
+                .Take(validPageFilter.per_page)
+                .ToListAsync();
+            var totalHotels = await _context.hotels.CountAsync();
+            return Ok(new PagenatedResponse<List<Hotel>>(totalHotels,validPageFilter.per_page,validPageFilter.current_page,hotels));
             if (hotels != null)
             {
                 return Ok(hotels); // Return a 200 OK response with the JSON data

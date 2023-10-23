@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PublicTravelApi.Models;
 using TravelAPI.DataAccessLayer;
+using TravelAPI.Models;
 
 namespace PublicTravelApi.Controllers
 {
@@ -23,16 +24,23 @@ namespace PublicTravelApi.Controllers
 
         // GET: Restaurants
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Restaurant>>> GetRestaurants([FromQuery] PaginationFilter filter)
         {
-            var Restaurants = await _context.restraunts.ToListAsync();
+            var validPageFilter = new PaginationFilter(filter.per_page, filter.current_page);
+            var Restaurants = await _context.restraunts.Include(x => x.RestaurantReview)
+                .Skip((validPageFilter.current_page - 1) * validPageFilter.per_page)
+                .Take(validPageFilter.per_page)
+                .ToListAsync();
+            var totalRestaurants = await _context.restraunts.CountAsync();
+            return Ok(new PagenatedResponse<List<Restaurant>>(totalRestaurants, validPageFilter.per_page, validPageFilter.current_page,Restaurants));
+
             if (Restaurants != null)
             {
                 return Ok(Restaurants);
             }
             else
             {
-                return BadRequest("Restaurants are not available");
+                return Ok("Restaurants are not available");
             }
              
         }
